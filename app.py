@@ -280,6 +280,7 @@ def batch_page():
 
             # Keep only trained features
             batch_data = data[trained_features_local].copy()
+            batch_data = batch_data.reindex(columns=trained_features_local)
 
             # OPTIONAL BINARY MAPPING
             if batch_data["voice.plan"].dtype == "object":
@@ -317,7 +318,6 @@ def batch_page():
             batch_scaled[numeric_cols] = scaler.transform(batch_scaled[numeric_cols])
 
             # Run Prediction
-
             if st.button("🚀 Run Batch Prediction"):
                 # Predict
                 predictions = model.predict(batch_scaled)
