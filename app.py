@@ -16,6 +16,8 @@ scaler = loaded_pipeline["scaler"]
 trained_features = loaded_pipeline["trained_features"]
 benchmarks = loaded_pipeline["benchmarks"]
 
+trained_features = list(trained_features)
+
 # ---------------- PAGE CONFIG ----------------
 st.set_page_config(
     page_title="Telecom Churn Prediction",
