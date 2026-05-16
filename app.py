@@ -282,11 +282,8 @@ def batch_page():
             batch_data = data[trained_features_local].copy()
             batch_data = batch_data.reindex(columns=trained_features_local)
 
-            # OPTIONAL BINARY MAPPING
-            if batch_data["voice.plan"].dtype == "object":
+            # BINARY MAPPING
                 batch_data["voice.plan"] = (batch_data["voice.plan"].map({"Yes": 1, "No": 0}))
-
-            if batch_data["intl.plan"].dtype == "object":
                 batch_data["intl.plan"] = (batch_data["intl.plan"].map({"Yes": 1, "No": 0}))
 
             #Fixing Incorrect Data Types in Uploaded Data
