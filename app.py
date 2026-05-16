@@ -283,8 +283,8 @@ def batch_page():
             batch_data = batch_data.reindex(columns=trained_features_local)
 
             # BINARY MAPPING
-                batch_data["voice.plan"] = (batch_data["voice.plan"].map({"Yes": 1, "No": 0}))
-                batch_data["intl.plan"] = (batch_data["intl.plan"].map({"Yes": 1, "No": 0}))
+            batch_data["voice.plan"] = (batch_data["voice.plan"].map({"Yes": 1, "No": 0}))
+            batch_data["intl.plan"] = (batch_data["intl.plan"].map({"Yes": 1, "No": 0}))
 
             #Fixing Incorrect Data Types in Uploaded Data
             cols_to_convert=[]
