@@ -50,7 +50,7 @@ def customer_page():
 
         voice_plan = st.selectbox(
             "Voice Plan",
-            [0, 1]
+            ['Yes', 'No']
         )
 
         voice_messages = st.number_input(
@@ -62,7 +62,7 @@ def customer_page():
 
         intl_plan = st.selectbox(
             "International Plan",
-            [0, 1]
+            ['Yes', 'No']
         )
 
         intl_mins = st.number_input(
@@ -134,77 +134,76 @@ def customer_page():
 
     # ---------------- PREDICT BUTTON ----------------
     if st.button("🚀 Predict Churn"):
-
         # Build input dataframe
         input_data = pd.DataFrame([{
-            "account.length": account_length,
-            "voice.plan": voice_plan,
-            "voice.messages": voice_messages,
-            "intl.plan": intl_plan,
-            "intl.mins": intl_mins,
-            "intl.calls": intl_calls,
-            "day.mins": day_mins,
-            "day.calls": day_calls,
-            "eve.mins": eve_mins,
-            "eve.calls": eve_calls,
-            "night.mins": night_mins,
-            "night.calls": night_calls,
-            "customer.calls": customer_calls
+          "account.length": account_length,
+          "voice.plan": voice_plan,
+          "voice.messages": voice_messages,
+          "intl.plan": intl_plan,
+          "intl.mins": intl_mins,
+          "intl.calls": intl_calls,
+          "day.mins": day_mins,
+          "day.calls": day_calls,
+          "eve.mins": eve_mins,
+          "eve.calls": eve_calls,
+          "night.mins": night_mins,
+          "night.calls": night_calls,
+          "customer.calls": customer_calls
         }])
 
-            # Keep exact trained order
-            input_data = input_data[trained_features]
+        # Keep exact trained order
+        input_data = input_data[trained_features]
 
-            # Scale
-            num_cols=input_data.select_dtypes(include=['int64', 'float64']).columns
-            input_data[num_cols] = Rob_sca.transform(input_data[num_cols])
+        # Scale
+        num_cols=input_data.select_dtypes(include=['int64', 'float64']).columns
+        input_data[num_cols] = scaler.transform(input_data[num_cols])
 
-            #Encoding
-            input_data["voice.plan"] = input_data["voice.plan"].map({"Yes": 1, "No": 0})
-            input_data["intl.plan"] = input_data["intl.plan"].map({"Yes": 1,"No": 0})
+        #Encoding
+        input_data["voice.plan"] = input_data["voice.plan"].map({"Yes": 1, "No": 0})
+        input_data["intl.plan"] = input_data["intl.plan"].map({"Yes": 1,"No": 0})
 
-            # Predict
-            prediction = model.predict(input_data)[0]
-            churn_prob = model.predict_proba(input_data)[0][1]
+        # Predict
+        prediction = model.predict(input_data)[0]
+        churn_prob = model.predict_proba(input_data)[0][1]
 
-            # ---------------- RISK CATEGORY ----------------
-            if churn_prob > 0.7:
-                risk = "🔴 High Risk"
-                suggestion = [
-                    "Offer loyalty discounts",
-                    "Provide premium customer retention support",
-                    "Review international/voice plan pricing",
-                    "Reduce customer service friction"
-                ]
+        # ---------------- RISK CATEGORY ----------------
+        if churn_prob > 0.7:
+            risk = "🔴 High Risk"
+            suggestion = [
+                "Offer loyalty discounts",
+                "Provide premium customer retention support",
+                "Review international/voice plan pricing",
+                "Reduce customer service friction"
+            ]
 
-            elif churn_prob > 0.3:
-                risk = "🟡 Medium Risk"
-                suggestion = [
-                    "Personalized retention offers",
-                    "Monitor customer service calls",
-                    "Encourage plan optimization"
-                ]
+        elif churn_prob > 0.3:
+            risk = "🟡 Medium Risk"
+            suggestion = [
+                "Personalized retention offers",
+                "Monitor customer service calls",
+                "Encourage plan optimization"
+            ]
 
-            else:
-                risk = "🟢 Low Risk"
-                suggestion = [
-                    "Maintain current satisfaction",
-                    "Upsell suitable premium plans",
-                    "Reward customer loyalty"
-                ]
+        else:
+            risk = "🟢 Low Risk"
+            suggestion = [
+                "Maintain current satisfaction",
+                "Upsell suitable premium plans",
+                "Reward customer loyalty"
+            ]
 
-            # ---------------- DISPLAY ----------------
-            churn_label = "Yes" if prediction == 1 else "No"
+        # ---------------- DISPLAY ----------------
+        churn_label = "Yes" if prediction == 1 else "No"
 
-            st.success(f"Predicted Churn: {churn_label}")
-            st.info(f"Risk Level: {risk}")
-            st.info(f"Churn Probability: {churn_prob:.2%}")
+        st.success(f"Predicted Churn: {churn_label}")
+        st.info(f"Risk Level: {risk}")
+        st.info(f"Churn Probability: {churn_prob:.2%}")
 
-            st.progress(int(churn_prob * 100))
+        st.progress(int(churn_prob * 100))
 
-            st.subheader("💡 Retention Strategy")
-            for item in suggestion:
-                st.write(f"- {item}")
+        st.subheader("💡 Retention Strategy")
+        for item in suggestion:
+            st.write(f"- {item}")
 
 # BATCH PREDICTION PAGE
 def batch_page():
@@ -272,158 +271,159 @@ def batch_page():
                     f"❌ Missing Required Columns: {missing_cols}"
                 )
                 st.stop()
-            else:
-                # Extra Columns Warning
-                if extra_cols:
-                    st.warning(
-                        f"⚠ Extra Columns Found (will be ignored): {extra_cols}"
+            # Extra Columns Warning
+            if extra_cols:
+                st.warning(
+                    f"⚠ Extra Columns Found (will be ignored): {extra_cols}"
+                )
+
+            # Keep only trained features
+            batch_data = data[trained_features].copy()
+
+            # OPTIONAL BINARY MAPPING
+            if batch_data["voice.plan"].dtype == "object":
+                batch_data["voice.plan"] = (batch_data["voice.plan"].map({"Yes": 1, "No": 0}))
+
+            if batch_data["intl.plan"].dtype == "object":
+                batch_data["intl.plan"] = (batch_data["intl.plan"].map({"Yes": 1, "No": 0}))
+
+            #Fixing Incorrect Data Types in Uploaded Data
+            cols_to_convert=[]
+            for col in batch_data.select_dtypes(include='object').columns:
+                converted = pd.to_numeric(batch_data[col], errors='coerce')
+                numeric_ratio = converted.notnull().sum() / len(batch_data)
+
+                if numeric_ratio > 0.8:
+                  cols_to_convert.append(col)
+
+            for col in cols_to_convert:
+                batch_data[col] = pd.to_numeric(batch_data[col].replace(['Nan', 'nan', 'NA', ''], pd.NA), errors='coerce')
+
+            # Check missing values
+            if batch_data.isnull().sum().sum() > 0:
+               st.warning("Missing values found. Filling with safe defaults.")
+               binary_cols = ["voice.plan", "intl.plan"]
+               batch_data[binary_cols] = batch_data[binary_cols].fillna(0)
+
+               numeric_cols = batch_data.columns.difference(binary_cols)
+               batch_data[numeric_cols] = batch_data[numeric_cols].fillna(
+                batch_data[numeric_cols].median())
+
+            # Scale
+            binary_cols = ["voice.plan", "intl.plan"]
+            numeric_cols = batch_data.columns.difference(binary_cols)
+            batch_scaled = batch_data.copy()
+            batch_scaled[numeric_cols] = scaler.transform(batch_scaled[numeric_cols])
+
+            # Run Prediction
+
+            if st.button("🚀 Run Batch Prediction"):
+                # Predict
+                predictions = model.predict(batch_scaled)
+                probabilities = model.predict_proba(batch_scaled)[:, 1]
+
+                # Add Prediction Columns
+                data["Predicted_Churn"] = predictions
+
+                data["Predicted_Churn_Label"] = (data["Predicted_Churn"].map({1: "Yes",0: "No"}))
+
+                data["Churn_Probability"] = probabilities
+
+                # Success Message
+                st.success(
+                    "✅ Batch Prediction Completed!"
+                )
+
+                # SUMMARY METRICS
+                churn_count = (data["Predicted_Churn"] == 1).sum()
+
+                churn_rate = (churn_count / len(data)) * 100
+
+                col1, col2, col3 = st.columns(3)
+
+                col1.metric("Total Customers",len(data))
+
+                col2.metric("Predicted Churners",churn_count)
+
+                col3.metric("Predicted Churn Rate",f"{churn_rate:.2f}%")
+
+                # Average Probability
+                st.info(
+                    f"Average Churn Probability: "
+                    f"{data['Churn_Probability'].mean():.2%}"
+                )
+
+                # RESULTS TABLE
+                st.write("### Prediction Results")
+                st.dataframe(data)
+
+                # HIGH RISK CUSTOMERS
+                high_risk = data[
+                    data["Churn_Probability"] > 0.7
+                ]
+
+                st.write(
+                    "### 🔴 High Risk Customers (>70%)"
+                )
+
+                if len(high_risk) > 0:
+                    st.dataframe(high_risk)
+                else:
+                    st.write(
+                        "No high-risk customers found."
                     )
 
-                # Keep only trained features
-                batch_data = data[trained_features].copy()
+                #chart
+                st.markdown("---")
 
-                # OPTIONAL BINARY MAPPING
-                if batch_data["voice.plan"].dtype == "object":
-                    batch_data["voice.plan"] = (batch_data["voice.plan"].map({"Yes": 1, "No": 0}))
+                total = len(data)
+                churn_counts=data["Predicted_Churn"].value_counts()
+                churn_pct = (churn_counts.get(1, 0) / total) * 100
+                non_churn_pct = (churn_counts.get(0, 0) / total) * 100
 
-                if batch_data["intl.plan"].dtype == "object":
-                    batch_data["intl.plan"] = (batch_data["intl.plan"].map({"Yes": 1, "No": 0}))
+                fig, ax = plt.subplots()
 
-                #Fixing Incorrect Data Types in Uploaded Data
-                cols_to_convert=[]
-                for col in batch_data.select_dtypes(include='object').columns:
-                    converted = pd.to_numeric(batch_data[col], errors='coerce')
-                    numeric_ratio = converted.notnull().sum() / len(batch_data)
+                ax.bar(
+                    ["Non-Churn %", "Churn %"],
+                    [non_churn_pct, churn_pct]
+                )
 
-                    if numeric_ratio > 0.8:
-                      cols_to_convert.append(col)
+                ax.set_ylabel("Percentage")
+                ax.set_title("Churn Rate Percentage")
 
-                for col in cols_to_convert:
-                    batch_data[col] = pd.to_numeric(batch_data[col].replace(['Nan', 'nan', 'NA', ''], pd.NA), errors='coerce')
+                st.subheader("📊 Churn Rate Percentage")
+                st.pyplot(fig)
 
-                # Check missing values
-                if batch_data.isnull().sum().sum() > 0:
-                   st.warning("Missing values found. Filling with safe defaults.")
-                   binary_cols = ["voice.plan", "intl.plan"]
-                   batch_data[binary_cols] = batch_data[binary_cols].fillna(0)
+                st.markdown("---")
 
-                   numeric_cols = batch_data.columns.difference(binary_cols)
-                   batch_data[numeric_cols] = batch_data[numeric_cols].fillna(
-                    batch_data[numeric_cols].median())
+                # Business recommendations
+                st.markdown("""
+                ### 💡 Business Recommendations:
 
-                # Run Prediction
+                - 🎯 Focus retention campaigns on **high-risk customers (>70%)**
+                - 💰 Offer discounts or loyalty rewards to reduce churn
+                - 📞 Increase customer support engagement for medium-risk users
+                - 📊 Monitor churn probability trends monthly
+                - 🔍 Identify top features influencing churn for strategy improvement
+                """)
 
-                if st.button("🚀 Run Batch Prediction"):
+                st.markdown("---")
 
-                        # Scale
-                        batch_scaled = scaler.transform(batch_data)
+                # Model note
+                st.info("""
+                🤖 Model Note:
+                Predictions are based on trained machine learning model.
+                Probability values represent churn risk score, not certainty.
+                """)
+                # DOWNLOAD RESULTS
+                csv_output = (data.to_csv(index=False).encode("utf-8"))
 
-                        # Predict
-                        predictions = model.predict(batch_scaled)
-                        probabilities = model.predict_proba(batch_scaled)[:, 1]
-
-                        # Add Prediction Columns
-                        data["Predicted_Churn"] = predictions
-
-                        data["Predicted_Churn_Label"] = (data["Predicted_Churn"].map({1: "Yes",0: "No"}))
-
-                        data["Churn_Probability"] = probabilities
-
-                        # Success Message
-                        st.success(
-                            "✅ Batch Prediction Completed!"
-                        )
-
-                        # SUMMARY METRICS
-                        churn_count = (data["Predicted_Churn"] == 1).sum()
-
-                        churn_rate = (churn_count / len(data)) * 100
-
-                        col1, col2, col3 = st.columns(3)
-
-                        col1.metric("Total Customers",len(data))
-
-                        col2.metric("Predicted Churners",churn_count)
-
-                        col3.metric("Predicted Churn Rate",f"{churn_rate:.2f}%")
-
-                        # Average Probability
-                        st.info(
-                            f"Average Churn Probability: "
-                            f"{data[' Probability_of_Churn'].mean():.2%}"
-                        )
-
-                        # RESULTS TABLE
-                        st.write("### Prediction Results")
-                        st.dataframe(data)
-
-                        # HIGH RISK CUSTOMERS
-                        high_risk = data[
-                            data["Churn_Probability"] > 0.7
-                        ]
-
-                        st.write(
-                            "### 🔴 High Risk Customers (>70%)"
-                        )
-
-                        if len(high_risk) > 0:
-                            st.dataframe(high_risk)
-                        else:
-                            st.write(
-                                "No high-risk customers found."
-                            )
-
-                        #chart
-                        st.markdown("---")
-
-                        total = len(data)
-                        churn_counts=data["Predicted_Churn"].value_counts()
-                        churn_pct = (churn_counts.get(1, 0) / total) * 100
-                        non_churn_pct = (churn_counts.get(0, 0) / total) * 100
-
-                        fig, ax = plt.subplots()
-
-                        ax.bar(
-                            ["Non-Churn %", "Churn %"],
-                            [non_churn_pct, churn_pct]
-                        )
-
-                        ax.set_ylabel("Percentage")
-                        ax.set_title("Churn Rate Percentage")
-
-                        st.subheader("📊 Churn Rate Percentage")
-                        st.pyplot(fig)
-
-                        st.markdown("---")
-
-                        # Business recommendations
-                        st.markdown("""
-                        ### 💡 Business Recommendations:
-
-                        - 🎯 Focus retention campaigns on **high-risk customers (>70%)**
-                        - 💰 Offer discounts or loyalty rewards to reduce churn
-                        - 📞 Increase customer support engagement for medium-risk users
-                        - 📊 Monitor churn probability trends monthly
-                        - 🔍 Identify top features influencing churn for strategy improvement
-                        """)
-
-                        st.markdown("---")
-
-                        # Model note
-                        st.info("""
-                        🤖 Model Note:
-                        Predictions are based on trained machine learning model.
-                        Probability values represent churn risk score, not certainty.
-                        """)
-                        # DOWNLOAD RESULTS
-                        csv_output = (data.to_csv(index=False).encode("utf-8"))
-
-                        st.download_button(
-                            label="📥 Download Prediction Results (CSV)",
-                            data=csv_output,
-                            file_name="batch_predictions.csv",
-                            mime="text/csv"
-                        )
+                st.download_button(
+                    label="📥 Download Prediction Results (CSV)",
+                    data=csv_output,
+                    file_name="batch_predictions.csv",
+                    mime="text/csv"
+                )
 
         # ERROR HANDLING
         except Exception as e:
