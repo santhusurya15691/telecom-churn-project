@@ -254,16 +254,16 @@ def batch_page():
 
 
             data.columns = data.columns.str.strip().str.lower()
-            trained_features = [col.lower() for col in trained_features]
+            trained_features_local = [col.lower() for col in trained_features]
             # VALIDATE REQUIRED FEATURES
             missing_cols = [
-                col for col in trained_features
+                col for col in trained_features_local
                 if col not in data.columns
             ]
 
             extra_cols = [
                 col for col in data.columns
-                if col not in trained_features
+                if col not in trained_features_local
             ]
 
             # Missing Columns
@@ -279,7 +279,7 @@ def batch_page():
                 )
 
             # Keep only trained features
-            batch_data = data[trained_features].copy()
+            batch_data = data[trained_features_local].copy()
 
             # OPTIONAL BINARY MAPPING
             if batch_data["voice.plan"].dtype == "object":
