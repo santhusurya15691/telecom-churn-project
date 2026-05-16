@@ -1,7 +1,6 @@
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-import seaborn as sns
 import joblib
 import streamlit as st
 from sklearn.metrics import accuracy_score,log_loss,classification_report,roc_auc_score, roc_curve,confusion_matrix
@@ -15,7 +14,7 @@ loaded_pipeline = joblib.load("telecom_churn_pipeline.pkl")
 model = loaded_pipeline["model"]
 scaler = loaded_pipeline["scaler"]
 trained_features = loaded_pipeline["trained_features"]
-benchmarks = loaded_pipeline["benchmark_metrics"]
+benchmarks = loaded_pipeline["benchmarks"]
 
 # ---------------- PAGE CONFIG ----------------
 st.set_page_config(
