@@ -312,10 +312,10 @@ def batch_page():
                 batch_data[numeric_cols].median())
 
             # Scale
-            binary_cols = ["voice.plan", "intl.plan"]
-            numeric_cols = batch_data.columns.difference(binary_cols)
+            numeric_cols = scaler.feature_names_in_
             batch_scaled = batch_data.copy()
             batch_scaled[numeric_cols] = scaler.transform(batch_scaled[numeric_cols])
+
 
             # Run Prediction
             if st.button("🚀 Run Batch Prediction"):
